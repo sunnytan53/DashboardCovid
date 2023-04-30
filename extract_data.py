@@ -7,9 +7,10 @@ def get_date(d: str):
 
 
 df_list = []
-last_skip = get_date("01-01-2018")
+last_skip = get_date("01-01-2000")
 path = "csse_covid_19_daily_reports/"
 
+print("*** get all data from daily report")
 for filename in os.listdir(path):
     if filename.endswith(".csv"):
         try:
@@ -32,21 +33,54 @@ for filename in os.listdir(path):
 print("last skipped date:", last_skip)
 
 
-df_final = (
-    pd.concat(df_list, ignore_index=True)
-    .rename(
-        columns={
-            "Admin2": "city",
-            "Province_State": "state",
-            "Country_Region": "region",
-            "Confirmed": "confirmed",
-            "Deaths": "deaths",
-            "Date": "date",
-        }
-    )
-    .sort_values(["date", "region", "state", "city"])
+print("*** convert cumulative data into daily data")
+df_2: pd.DataFrame = pd.concat(df_list, ignore_index=True).rename(
+    columns={
+        "Admin2": "City",
+        "Province_State": "State",
+        "Country_Region": "Region",
+        "Confirmed": "Confirmed Cases",
+        "Deaths": "Death Cases",
+        "Date": "Date",
+    }
+)
+
+last_letter = ""
+df_list = []
+for _, row in df_2.drop_duplicates(
+    ["City", "State", "Region"], ignore_index=True
+).iterrows():
+    if row["Region"][0] > last_letter:
+        last_letter = row["Region"][0]
+        print(f"* processing letter {last_letter}")
+
+    df = df_2[
+        (
+            (df_2["City"] == row["City"])
+            if (type(row["City"]) == str)
+            else (df_2["City"].isna())
+        )
+        & (
+            (df_2["State"] == row["State"])
+            if (type(row["State"]) == str)
+            else (df_2["State"].isna())
+        )
+        & (df_2["Region"] == row["Region"])
+    ].sort_values(["Date"])
+
+    df["Confirmed Cases"] = df["Confirmed Cases"].diff()
+    df["Death Cases"] = df["Death Cases"].diff()
+    df = df[1:]  # MUST delete the first row because it becomes NaN
+    df["Confirmed Cases"] = df["Confirmed Cases"].astype(int)
+    df["Death Cases"] = df["Death Cases"].astype(int)
+
+    df_list.append(df)
+
+
+print("*** finalize and export into data.zip")
+df_final = pd.concat(df_list, ignore_index=True).sort_values(
+    ["Date", "Region", "State", "City"]
 )
 df_final.info()
-
-
+print(df_final["Confirmed Cases"].max(), df_final["Death Cases"].max())
 df_final.to_csv("data.zip", compression="zip", index=False)
