@@ -34,7 +34,7 @@ print("last skipped date:", last_skip)
 
 
 print("*** convert cumulative data into daily data")
-df_2: pd.DataFrame = pd.concat(df_list, ignore_index=True).rename(
+df_2 = pd.concat(df_list, ignore_index=True).rename(
     columns={
         "Admin2": "City",
         "Province_State": "State",
@@ -45,14 +45,10 @@ df_2: pd.DataFrame = pd.concat(df_list, ignore_index=True).rename(
     }
 )
 
-last_letter = ""
 df_list = []
-for _, row in df_2.drop_duplicates(
-    ["City", "State", "Region"], ignore_index=True
-).iterrows():
-    if row["Region"][0] > last_letter:
-        last_letter = row["Region"][0]
-        print(f"* processing letter {last_letter}")
+df_3 = df_2.drop_duplicates(["City", "State", "Region"], ignore_index=True)
+for i, row in df_3.iterrows():
+    print(f"* progress: {i}/{df_3.shape[0]}", end="\r")
 
     df = df_2[
         (
@@ -71,8 +67,8 @@ for _, row in df_2.drop_duplicates(
     df["Confirmed Cases"] = df["Confirmed Cases"].diff()
     df["Death Cases"] = df["Death Cases"].diff()
     df = df[1:]  # MUST delete the first row because it becomes NaN
-    df["Confirmed Cases"] = df["Confirmed Cases"].astype(int)
-    df["Death Cases"] = df["Death Cases"].astype(int)
+    df["Confirmed Cases"] = df["Confirmed Cases"].astype(int).clip(lower=0)
+    df["Death Cases"] = df["Death Cases"].astype(int).clip(lower=0)
 
     df_list.append(df)
 
@@ -82,5 +78,4 @@ df_final = pd.concat(df_list, ignore_index=True).sort_values(
     ["Date", "Region", "State", "City"]
 )
 df_final.info()
-print(df_final["Confirmed Cases"].max(), df_final["Death Cases"].max())
 df_final.to_csv("data.zip", compression="zip", index=False)
