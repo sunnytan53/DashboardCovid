@@ -1,10 +1,10 @@
 import dash
-from dash import html, dcc
+from dash import html, dcc, callback
 import dash_bootstrap_components as dbc
 from dash.dependencies import Input, Output
 
 
-pages = {"line": ["Normal"], "bar": ["Normal"], "pie": ["Normal"]}
+pages = ["line", "bar", "pie"]
 app = dash.Dash(__name__, use_pages=True, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
 
@@ -13,20 +13,12 @@ app.layout = html.Div(
         dcc.Location(id="url", refresh=False),
         dbc.NavbarSimple(
             children=[
-                *(
-                    dbc.DropdownMenu(
-                        children=[
-                            dbc.DropdownMenuItem(items[i], href=f"/{name}{i}")
-                            for i in range(len(items))
-                        ],
-                        class_name="ps-5 mb-1",
-                        label=name.capitalize(),
-                        menu_variant="dark",
-                    )
-                    for name, items in pages.items()
-                ),
-                html.Div("Current Chart:", className="ps-5 fs-4 text-white"),
-                html.Div("", id="current-page", className="ps-3 fs-4 text-danger"),
+                dbc.NavLink(
+                    children=name.capitalize(),
+                    href=f"/{name}",
+                    id=f"nav-{name}",
+                )
+                for name in pages
             ],
             brand="COVID19 Dashboard",
             brand_href="/",
@@ -39,15 +31,17 @@ app.layout = html.Div(
 )
 
 
-@app.callback(
-    Output("current-page", "children"),
+@callback(
+    *(Output(f"nav-{name}", "className") for name in pages),
     Input("url", "pathname"),
 )
 def update_nav_url(url: str):
-    if url == "/":
-        return "Select a chart to start!"
-    name = url[1:-1]
-    return f"{name.capitalize()} - {pages[name][int(url[-1])]}"
+    ret = ["px-5"] * len(pages)
+    try:
+        ret[pages.index(url[1:])] += " bg-light text-dark fw-bold"
+    except:
+        pass
+    return ret
 
 
 if __name__ == "__main__":
