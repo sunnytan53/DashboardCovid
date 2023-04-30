@@ -19,13 +19,14 @@ app.layout = html.Div(
                             dbc.DropdownMenuItem(items[i], href=f"/{name}{i}")
                             for i in range(len(items))
                         ],
-                        class_name="ps-5",
+                        class_name="ps-5 mb-1",
                         label=name.capitalize(),
+                        menu_variant="dark",
                     )
                     for name, items in pages.items()
                 ),
                 html.Div("Current Chart:", className="ps-5 fs-4 text-white"),
-                html.Div("", id="current-page", className="ps-3 fs-4 text-danger")
+                html.Div("", id="current-page", className="ps-3 fs-4 text-danger"),
             ],
             brand="COVID19 Dashboard",
             brand_href="/",
