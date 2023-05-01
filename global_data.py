@@ -21,15 +21,30 @@ df_final = pd.read_csv(
 levels = ["Region", "State", "City"]
 locations = {}
 for _, row in df_final[levels].drop_duplicates(levels, ignore_index=True).iterrows():
-    row = [x if type(x) == str else "Unassigned" for x in list(row)]
+    row = [x if type(x) == str else None for x in list(row)]
 
     locations.setdefault(row[0], {})
-    locations[row[0]].setdefault(row[1], set())
-    locations[row[0]][row[1]].add(row[2])
+    if row[1]:
+        locations[row[0]].setdefault(row[1], set())
+        if row[2]:
+            locations[row[0]][row[1]].add(row[2])
 
-for region in locations.values():
-    for state, city in region.items():
-        state = sorted(city)
+region_has_states = []
+state_has_cities = set()
+region_has_cities = []
+for region, state_dict in locations.items():
+    if state_dict:
+        region_has_states.append(region)
+    has_city = False
+    for state, city_set in state_dict.items():
+        state_dict[state] = sorted(city_set)
+        if city_set:
+            state_has_cities.add(f"{region} / {state}")
+            has_city = True
+    if has_city:
+        region_has_cities.append(region)
+region_has_states.sort()
+region_has_cities.sort()
 
 
 ###
@@ -38,7 +53,7 @@ for region in locations.values():
 def _level():
     return dcc.RadioItems(
         levels,
-        "Region",
+        "City",
         inline=True,
         id="level",
         className="pt-3 fs-5",
@@ -123,6 +138,16 @@ def common_component():
 ###
 ### Callbacks
 ###
+@callback(
+    Output("select-region", "options"),
+    Input("level", "value"),
+)
+def _switch_select_region(level: str):
+    if level == "State":
+        return region_has_states
+    elif level == "City":
+        return region_has_cities
+    return list(locations.keys())
 
 
 @callback(
@@ -136,27 +161,29 @@ def common_component():
     Input("all-region", "value"),
     Input("all-state", "value"),
 )
-def switch_select_state(
+def _switch_select_state(
     level: str,
-    values: list,
-    region_options: list,
+    values: list[str],
+    region_options: list[str],
     all_region: bool,
     all_state: bool,
 ):
-    ret = ["Select a region first", [], [], True]
+    ret = ["Click to search, or select all", [], [], True]
     if level == "Region":
         ret[0] = "Not state or city level"
     else:
+        is_city_level = level == "City"
         if all_region:
             values = region_options
         if values:
             for region in values:
                 for state in locations[region].keys():
-                    ret[1].append(f"{region} / {state}")
+                    state_str = f"{region} / {state}"
+                    if not is_city_level or (state_str in state_has_cities):
+                        ret[1].append(state_str)
             # show states
-            ret[1] = sorted(ret[1])
+            ret[1].sort()
             if all_state:
-                ret[3] = True
                 ret[0] = "All states selected"
             else:
                 ret[3] = False
@@ -176,14 +203,14 @@ def switch_select_state(
     Input("all-state", "value"),
     Input("all-city", "value"),
 )
-def switch_select_city(
+def _switch_select_city(
     level: str,
     values: str,
-    state_options: list,
+    state_options: list[str],
     all_state: bool,
     all_city: bool,
 ):
-    ret = ["Select a state first", [], [], True]
+    ret = ["Click to search, or select all", [], [], True]
     if level != "City":
         ret[0] = "Not city level"
     else:
@@ -195,7 +222,7 @@ def switch_select_city(
                 for city in locations[region][state]:
                     ret[1].append(f"{x} / {city}")
             # show cities
-            ret[1] = sorted(ret[1])
+            ret[1].sort()
             if all_city:
                 ret[3] = True
                 ret[0] = "All cities selected"
@@ -212,7 +239,7 @@ def switch_select_city(
     Output("all-city", "disabled"),
     Input("level", "value"),
 )
-def swtich_all(level: str):
+def _swtich_all(level: str):
     arr = [False] * 3
     if level == "Region":
         arr[1] = True
@@ -228,7 +255,7 @@ def swtich_all(level: str):
     Output("select-region", "disabled"),
     Input("all-region", "value"),
 )
-def select_all_region(all_region: list):
+def _select_all_region(all_region: bool):
     if all_region:
         return "All regions selected", [], True
     return "Click to search/select regions", [], False
