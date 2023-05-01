@@ -17,8 +17,6 @@ df_final = pd.read_csv(
 )
 
 # df.info()
-min_date = df_final["Date"].min()
-max_date = df_final["Date"].max()
 
 levels = ["Region", "State", "City"]
 locations = {}
@@ -34,33 +32,23 @@ for region in locations.values():
         state = sorted(city)
 
 
-def date_component():
-    return html.Div(
-        [
-            html.B("Date Range", className="pe-3 fs-5"),
-            dcc.DatePickerRange(
-                id="date",
-                start_date=min_date,
-                end_date=max_date,
-                min_date_allowed=min_date,
-                max_date_allowed=max_date,
-            ),
-        ]
+###
+### Components
+###
+def _level():
+    return dcc.RadioItems(
+        levels,
+        "Region",
+        inline=True,
+        id="level",
+        className="pt-3 fs-5",
+        labelClassName="px-3",
     )
 
 
-### Shared Components & Callbacks
-def level_component():
-    return html.Div(
+def _select():
+    return dbc.Row(
         [
-            dcc.RadioItems(
-                levels,
-                "Region",
-                inline=True,
-                id="level",
-                className="pt-3 fs-5",
-                labelClassName="px-3",
-            ),
             dbc.Row(
                 [
                     dbc.Col(
@@ -71,7 +59,9 @@ def level_component():
                             placeholder="Click to search, or select all",
                         )
                     ),
-                    dbc.Col(dbc.Checkbox(id="all-region", label="All regions"), width=3),
+                    dbc.Col(
+                        dbc.Checkbox(id="all-region", label="All regions"), width=3
+                    ),
                 ],
                 className="pt-3",
             ),
@@ -91,6 +81,48 @@ def level_component():
             ),
         ]
     )
+
+
+def _date_case():
+    min_date = df_final["Date"].min()
+    max_date = df_final["Date"].max()
+    return dbc.Row(
+        [
+            dbc.Col(
+                dcc.DatePickerRange(
+                    id="date",
+                    start_date=min_date,
+                    end_date=max_date,
+                    min_date_allowed=min_date,
+                    max_date_allowed=max_date,
+                )
+            ),
+            dbc.Col(
+                dbc.Checklist(
+                    ["Confirmed", "Death"],
+                    id="case",
+                    value=["Confirmed", "Death"],
+                ),
+                width=3,
+            ),
+        ],
+        className="pt-3",
+    )
+
+
+def common_component():
+    return html.Div(
+        [
+            _level(),
+            _select(),
+            _date_case(),
+        ]
+    )
+
+
+###
+### Callbacks
+###
 
 
 @callback(
