@@ -1,13 +1,10 @@
+from dash import html, dcc, Input, Output, callback
 import dash
-from dash import html, dcc, callback
 import dash_bootstrap_components as dbc
-from dash.dependencies import Input, Output
 
-
-pages = ["line", "bar", "pie"]
 app = dash.Dash(__name__, use_pages=True, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
-
+pages = ["line", "bar", "pie"]
 app.layout = html.Div(
     [
         dcc.Location(id="url", refresh=False),
