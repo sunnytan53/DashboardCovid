@@ -118,7 +118,7 @@ def _switch_select_state(
     all_region: bool,
     all_state: bool,
 ):
-    ret = ["Click to search, or select all", [], [], True]
+    ret = ["Select a region above, or check all", [], [], True]
     if level == "Region":
         ret[0] = "Not state or city level"
     else:
@@ -161,7 +161,7 @@ def _switch_select_city(
     all_state: bool,
     all_city: bool,
 ):
-    ret = ["Click to search, or select all", [], [], True]
+    ret = ["Select a state above, or check all", [], [], True]
     if level != "City":
         ret[0] = "Not city level"
     else:
