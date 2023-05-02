@@ -1,55 +1,8 @@
-import pandas as pd
 from dash import dcc, html, callback, Input, Output
 import dash_bootstrap_components as dbc
+from init_data import *
 
 
-df_final = pd.read_csv(
-    "data.zip",
-    dtype={  # shrik memory usage by converting known types
-        "City": "category",
-        "State": "category",
-        "Region": "category",
-        "Confirmed Cases": "uint32",
-        "Death Cases": "uint32",
-    },
-    parse_dates=["Date"],
-    nrows=400000,
-)
-
-# df.info()
-
-levels = ["Region", "State", "City"]
-locations = {}
-for _, row in df_final[levels].drop_duplicates(levels, ignore_index=True).iterrows():
-    row = [x if type(x) == str else None for x in list(row)]
-
-    locations.setdefault(row[0], {})
-    if row[1]:
-        locations[row[0]].setdefault(row[1], set())
-        if row[2]:
-            locations[row[0]][row[1]].add(row[2])
-
-region_has_states = []
-state_has_cities = set()
-region_has_cities = []
-for region, state_dict in locations.items():
-    if state_dict:
-        region_has_states.append(region)
-    has_city = False
-    for state, city_set in state_dict.items():
-        state_dict[state] = sorted(city_set)
-        if city_set:
-            state_has_cities.add(f"{region} / {state}")
-            has_city = True
-    if has_city:
-        region_has_cities.append(region)
-region_has_states.sort()
-region_has_cities.sort()
-
-
-###
-### Components
-###
 def _level():
     return dcc.RadioItems(
         levels,
@@ -68,7 +21,6 @@ def _select():
                 [
                     dbc.Col(
                         dcc.Dropdown(
-                            list(locations.keys()),
                             multi=True,
                             id="select-region",
                             placeholder="Click to search, or select all",
@@ -99,24 +51,22 @@ def _select():
 
 
 def _date_case():
-    min_date = df_final["Date"].min()
-    max_date = df_final["Date"].max()
     return dbc.Row(
         [
             dbc.Col(
                 dcc.DatePickerRange(
                     id="date",
-                    start_date=min_date,
-                    end_date=max_date,
-                    min_date_allowed=min_date,
-                    max_date_allowed=max_date,
+                    start_date="2019-01-01",
+                    end_date="2023-04-01",
+                    min_date_allowed="2019-01-01",
+                    max_date_allowed="2023-04-01",
                 )
             ),
             dbc.Col(
                 dbc.Checklist(
-                    ["Confirmed", "Death"],
+                    ["Confirmed Cases", "Death Cases"],
                     id="case",
-                    value=["Confirmed", "Death"],
+                    value=["Confirmed Cases", "Death Cases"],
                 ),
                 width=3,
             ),
@@ -147,7 +97,7 @@ def _switch_select_region(level: str):
         return region_has_states
     elif level == "City":
         return region_has_cities
-    return list(locations.keys())
+    return region_no_limit
 
 
 @callback(
@@ -172,15 +122,16 @@ def _switch_select_state(
     if level == "Region":
         ret[0] = "Not state or city level"
     else:
-        is_city_level = level == "City"
         if all_region:
             values = region_options
         if values:
+            region_to_state = (
+                region_to_state_city if level == "City" else region_to_state_state
+            )
             for region in values:
-                for state in locations[region].keys():
+                for state in region_to_state[region]:
                     state_str = f"{region} / {state}"
-                    if not is_city_level or (state_str in state_has_cities):
-                        ret[1].append(state_str)
+                    ret[1].append(state_str)
             # show states
             ret[1].sort()
             if all_state:
@@ -219,7 +170,7 @@ def _switch_select_city(
         if values:
             for x in values:
                 region, state = x.split(" / ")
-                for city in locations[region][state]:
+                for city in state_to_city[state]:
                     ret[1].append(f"{x} / {city}")
             # show cities
             ret[1].sort()
