@@ -161,3 +161,4 @@ cython_debug/
 
 # ignore the un-preprocessed dataset
 csse_covid_19_daily_reports/
+data_after*.zip
