@@ -7,12 +7,12 @@ for x in levels:
     dfs[x] = pd.read_csv(
         f"data_{x.lower()}.zip",
         dtype={  # shrink memory usage by converting known types
-            x: "category",
+            x: "string",
             "Confirmed Cases": "int",
             "Death Cases": "int",
         },
         parse_dates=["Date"],
-        nrows=40000,
+        nrows=400000,
     )
 
 

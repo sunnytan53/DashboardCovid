@@ -6,7 +6,7 @@ from init_data import *
 def _level():
     return dcc.RadioItems(
         levels,
-        "City",
+        "Region",
         inline=True,
         id="level",
         className="pt-3 fs-5",
@@ -27,7 +27,12 @@ def _select():
                         )
                     ),
                     dbc.Col(
-                        dbc.Checkbox(id="all-region", label="All regions"), width=3
+                        dbc.Checkbox(
+                            id="all-region",
+                            label="All regions",
+                            className="text-danger",
+                        ),
+                        width=3,
                     ),
                 ],
                 className="pt-3",
@@ -35,14 +40,24 @@ def _select():
             dbc.Row(
                 [
                     dbc.Col(dcc.Dropdown(multi=True, id="select-state")),
-                    dbc.Col(dbc.Checkbox(id="all-state", label="All states"), width=3),
+                    dbc.Col(
+                        dbc.Checkbox(
+                            id="all-state", label="All states", className="text-danger"
+                        ),
+                        width=3,
+                    ),
                 ],
                 className="pt-3",
             ),
             dbc.Row(
                 [
                     dbc.Col(dcc.Dropdown(multi=True, id="select-city")),
-                    dbc.Col(dbc.Checkbox(id="all-city", label="All cities"), width=3),
+                    dbc.Col(
+                        dbc.Checkbox(
+                            id="all-city", label="All cities", className="text-danger"
+                        ),
+                        width=3,
+                    ),
                 ],
                 className="pt-3",
             ),
@@ -55,10 +70,10 @@ def _date_case():
         [
             dbc.Col(dcc.DatePickerRange(id="date", disabled=True)),
             dbc.Col(
-                dbc.Checklist(
+                dbc.RadioItems(
                     ["Confirmed Cases", "Death Cases"],
                     id="case",
-                    value=["Confirmed Cases", "Death Cases"],
+                    value="Confirmed Cases",
                 ),
                 width=3,
             ),
@@ -180,10 +195,13 @@ def _switch_select_city(
     Output("all-region", "disabled"),
     Output("all-state", "disabled"),
     Output("all-city", "disabled"),
+    Output("all-region", "value"),
+    Output("all-state", "value"),
+    Output("all-city", "value"),
     Input("level", "value"),
 )
 def _swtich_all(level: str):
-    arr = [False] * 3
+    arr = [False] * 3 + [False] * 3
     if level == "Region":
         arr[1] = True
         arr[2] = True

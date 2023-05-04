@@ -39,8 +39,8 @@ for i, row in df_loc.iterrows():
     df["Confirmed Cases"] = df["Confirmed Cases"].diff()
     df["Death Cases"] = df["Death Cases"].diff()
     df = df[1:]  # MUST delete the first row because it becomes NaN
-    df["Confirmed Cases"] = df["Confirmed Cases"].astype(int)
-    df["Death Cases"] = df["Death Cases"].astype(int)
+    df["Confirmed Cases"] = df["Confirmed Cases"].astype(int).clip(0)
+    df["Death Cases"] = df["Death Cases"].astype(int).clip(0)
 
     df_list.append(df)
 

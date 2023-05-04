@@ -20,7 +20,7 @@ layout = html.Div(
                     width=4,
                     class_name="ms-5 text-center",
                 ),
-                dbc.Col(dcc.Graph("line-graph")),
+                dbc.Col(dbc.Spinner(dcc.Graph("line-graph"), size="md", delay_show=500)),
             ],
         ),
     ]
@@ -48,28 +48,39 @@ def update_line(
     region_values: list[str],
     state_values: list[str],
     city_values: list[str],
-    region_option: list[str],
-    state_option: list[str],
-    city_option: list[str],
+    region_options: list[str],
+    state_options: list[str],
+    city_options: list[str],
     all_region: bool,
     all_state: bool,
     all_city: bool,
     start: str,
     end: str,
-    case: list[str],
+    case: str,
 ):
     valid_region = bool(region_values) or all_region
     valid_state = bool(state_values) or all_state
     valid_city = bool(city_values) or all_city
 
-    if level == "City" and valid_region and valid_state and valid_city:
-        print(city_values)
-        df = dfs[level]
-        mask = (df["Date"] >= datetime.strptime(start[:10], "%Y-%m-%d")) & (
-            df["Date"] <= datetime.strptime(end[:10], "%Y-%m-%d")
-        )
-        if not all_city:
-            mask &= df[level].isin(city_values)
-        return px.line(df[mask], x="Date", y=case, color=level)
+    df = dfs[level]
+    mask = None
+    if level == "City":
+        if valid_region and valid_state and valid_city:
+            mask = df[level].isin(city_options if all_city else city_values)
 
-    return px.line()
+    elif level == "State":
+        if valid_region and valid_state:
+            mask = df[level].isin(state_options if all_state else state_values)
+
+    elif level == "Region":
+        if valid_region:
+            mask = df[level].isin(region_options if all_region else region_values)
+
+    if mask is None:
+        return px.line()
+
+    mask &= (df["Date"] >= datetime.strptime(start[:10], "%Y-%m-%d")) & (
+        df["Date"] <= datetime.strptime(end[:10], "%Y-%m-%d")
+    )
+    
+    return px.line(df[mask], x="Date", y=case, color=level)
