@@ -53,15 +53,7 @@ def _select():
 def _date_case():
     return dbc.Row(
         [
-            dbc.Col(
-                dcc.DatePickerRange(
-                    id="date",
-                    start_date="2019-01-01",
-                    end_date="2023-04-01",
-                    min_date_allowed="2019-01-01",
-                    max_date_allowed="2023-04-01",
-                )
-            ),
+            dbc.Col(dcc.DatePickerRange(id="date", disabled=True)),
             dbc.Col(
                 dbc.Checklist(
                     ["Confirmed Cases", "Death Cases"],
@@ -210,3 +202,58 @@ def _select_all_region(all_region: bool):
     if all_region:
         return "All regions selected", [], True
     return "Click to search/select regions", [], False
+
+
+@callback(
+    Output("date", "disabled"),
+    Output("date", "start_date"),
+    Output("date", "end_date"),
+    Output("date", "min_date_allowed"),
+    Output("date", "max_date_allowed"),
+    Input("level", "value"),
+    Input("select-region", "value"),
+    Input("select-state", "value"),
+    Input("select-city", "value"),
+    Input("all-region", "value"),
+    Input("all-state", "value"),
+    Input("all-city", "value"),
+)
+def _switch_date_by_level(
+    level: str,
+    region_values: list,
+    state_values: list,
+    city_values: list,
+    all_region: bool,
+    all_state: bool,
+    all_city: bool,
+):
+    df: pd.DataFrame = None
+    if level == "Region":
+        if region_values:
+            df = dfs[level]
+            df = df[df[level].isin(region_values)]
+        elif all_region:
+            df = dfs[level]
+    elif level == "State" and (region_values or all_region):
+        if state_values:
+            df = dfs[level]
+            df = df[df[level].isin(state_values)]
+        elif all_state:
+            df = dfs[level]
+    elif (
+        level == "City"
+        and (region_values or all_region)
+        and (state_values or all_state)
+    ):
+        if city_values:
+            df = dfs[level]
+            df = df[df[level].isin(city_values)]
+        elif all_city:
+            df = dfs[level]
+
+    if df is not None:
+        min_date = df["Date"].min()
+        max_date = df["Date"].max()
+        return False, min_date, max_date, min_date, max_date
+
+    return [True] + [None] * 4
