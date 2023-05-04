@@ -1,33 +1,15 @@
 from dash import html, dcc, Input, Output, callback
 import plotly.express as px
 import dash
-import dash_bootstrap_components as dbc
 from init_data import dfs
-from comps import common_component
+from comps import line_page
 from datetime import datetime
 import pandas as pd
 
 
 dash.register_page(__name__, name="Line")
 
-layout = html.Div(
-    [
-        dbc.Row(
-            [
-                dbc.Col(
-                    children=[
-                        common_component(),
-                    ],
-                    width=4,
-                    class_name="ms-5 text-center",
-                ),
-                dbc.Col(
-                    dbc.Spinner(dcc.Graph("line-graph"), size="md", delay_show=300)
-                ),
-            ],
-        ),
-    ]
-)
+layout = line_page()
 
 
 @callback(

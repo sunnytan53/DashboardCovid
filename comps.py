@@ -93,7 +93,7 @@ def _category(border: str):
                     dbc.Col(dbc.Checkbox(id="cumu", label="Cumulative"), width=4),
                     dbc.Col(),
                 ],
-                className="pt-3",
+                className="pt-2",
             ),
         ],
         className="fs-5" + border,
@@ -109,7 +109,11 @@ def _date(border: str):
             dbc.Tabs(
                 [
                     dbc.Tab(
-                        [dbc.RadioItems(["Month", "Year", "Quarter"], inline=True)],
+                        [
+                            dbc.RadioItems(
+                                ["Month", "Year", "Quarter"], inline=True, value="Month"
+                            )
+                        ],
                         label="Exact Period",
                         tab_id="exact",
                     ),
@@ -131,14 +135,53 @@ def _date(border: str):
     )
 
 
-def common_component():
+def line_page():
     border = " my-2 py-2 border border-secondary "
-    return html.Div([_level(border), _category(border), _date(border)])
+    return dbc.Tabs(
+        [
+            dbc.Tab(
+                dbc.Row(
+                    [
+                        dbc.Col(
+                            children=[_level(border), _category(border), _date(border)],
+                            width=4,
+                            class_name="ms-5 text-center",
+                        ),
+                        dbc.Col(
+                            dbc.Spinner(
+                                dcc.Graph("line-graph"), size="md", delay_show=300
+                            ),
+                            id="graph-placeholder",
+                        ),
+                    ],
+                ),
+                label="Default",
+            ),
+            dbc.Tab(
+                dbc.Spinner(dcc.Graph("full-graph"), size="md", delay_show=300),
+                label="Fullscreen Graph",
+                id="full-graph",
+            ),
+        ],
+        className="px-5 bg-info",
+        id="tabs",
+    )
 
 
 ###
 ### Callbacks
 ###
+@callback(
+    Output("full-graph", "figure"),
+    Input("tabs", "active_tab"),
+    Input("line-graph", "figure"),
+)
+def switch_tab(active: str, graph):
+    if active == "default":
+        return None
+    return graph
+
+
 @callback(
     Output("select-region", "options"),
     Input("level", "value"),
