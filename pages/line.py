@@ -5,6 +5,7 @@ import dash_bootstrap_components as dbc
 from init_data import dfs
 from comps import common_component
 from datetime import datetime
+import pandas as pd
 
 
 dash.register_page(__name__, name="Line")
@@ -20,7 +21,9 @@ layout = html.Div(
                     width=4,
                     class_name="ms-5 text-center",
                 ),
-                dbc.Col(dbc.Spinner(dcc.Graph("line-graph"), size="md", delay_show=500)),
+                dbc.Col(
+                    dbc.Spinner(dcc.Graph("line-graph"), size="md", delay_show=300)
+                ),
             ],
         ),
     ]
@@ -42,6 +45,7 @@ layout = html.Div(
     Input("date", "start_date"),
     Input("date", "end_date"),
     Input("case", "value"),
+    Input("cumu", "value"),
 )
 def update_line(
     level: str,
@@ -56,7 +60,8 @@ def update_line(
     all_city: bool,
     start: str,
     end: str,
-    case: str,
+    case_cat: str,
+    to_cumu: bool,
 ):
     valid_region = bool(region_values) or all_region
     valid_state = bool(state_values) or all_state
@@ -79,8 +84,21 @@ def update_line(
     if mask is None:
         return px.line()
 
+    case_cat += " Cases"
     mask &= (df["Date"] >= datetime.strptime(start[:10], "%Y-%m-%d")) & (
         df["Date"] <= datetime.strptime(end[:10], "%Y-%m-%d")
     )
-    
-    return px.line(df[mask], x="Date", y=case, color=level)
+
+    df = df[mask]
+    if to_cumu:
+        df = df.drop(
+            "Death Cases" if case_cat == "Confirmed Cases" else "Confirmed Cases",
+            axis=1,
+        )
+        df_list = []
+        for _, x in df.groupby(level):
+            x[case_cat] = x[case_cat].cumsum()
+            df_list.append(x)
+        df = pd.concat(df_list)
+
+    return px.line(df, x="Date", y=case_cat, color=level)

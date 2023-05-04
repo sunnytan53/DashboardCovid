@@ -3,20 +3,24 @@ import dash_bootstrap_components as dbc
 from init_data import *
 
 
-def _level():
-    return dcc.RadioItems(
-        levels,
-        "Region",
-        inline=True,
-        id="level",
-        className="pt-3 fs-5",
-        labelClassName="px-3",
-    )
-
-
-def _select():
+def _level(border: str):
     return dbc.Row(
         [
+            dbc.Row(
+                [
+                    dbc.Col("Level: ", width=1),
+                    dbc.Col(
+                        dcc.RadioItems(
+                            levels,
+                            value="Region",
+                            inline=True,
+                            id="level",
+                            labelClassName="px-3 mx-1 bg-warning",
+                        ),
+                    ),
+                ],
+                className="fs-5",
+            ),
             dbc.Row(
                 [
                     dbc.Col(
@@ -32,7 +36,7 @@ def _select():
                             label="All regions",
                             className="text-danger",
                         ),
-                        width=3,
+                        width=4,
                     ),
                 ],
                 className="pt-3",
@@ -44,7 +48,7 @@ def _select():
                         dbc.Checkbox(
                             id="all-state", label="All states", className="text-danger"
                         ),
-                        width=3,
+                        width=4,
                     ),
                 ],
                 className="pt-3",
@@ -56,40 +60,80 @@ def _select():
                         dbc.Checkbox(
                             id="all-city", label="All cities", className="text-danger"
                         ),
-                        width=3,
+                        width=4,
                     ),
                 ],
                 className="pt-3",
             ),
-        ]
+        ],
+        class_name=border,
     )
 
 
-def _date_case():
+def _category(border: str):
     return dbc.Row(
         [
-            dbc.Col(dcc.DatePickerRange(id="date", disabled=True)),
-            dbc.Col(
-                dbc.RadioItems(
-                    ["Confirmed Cases", "Death Cases"],
-                    id="case",
-                    value="Confirmed Cases",
-                ),
-                width=3,
+            dbc.Row(
+                [
+                    dbc.Col("Case: ", width=1),
+                    dbc.Col(
+                        dcc.RadioItems(
+                            ["Confirmed", "Death"],
+                            id="case",
+                            value="Confirmed",
+                            inline=True,
+                            labelClassName="px-3 mx-1 bg-warning",
+                        ),
+                    ),
+                ]
+            ),
+            dbc.Row(
+                [
+                    dbc.Col("Cumulative: "),
+                    dbc.Col(dbc.Checkbox(id="cumu", label="Cumulative"), width=4),
+                    dbc.Col(),
+                ],
+                className="pt-3",
             ),
         ],
-        className="pt-3",
+        className="fs-5" + border,
+    )
+
+
+def _date(border: str):
+    return dbc.Row(
+        [
+            dbc.Row(
+                dcc.DatePickerRange(id="date", disabled=True),
+            ),
+            dbc.Tabs(
+                [
+                    dbc.Tab(
+                        [dbc.RadioItems(["Month", "Year", "Quarter"], inline=True)],
+                        label="Exact Period",
+                        tab_id="exact",
+                    ),
+                    dbc.Tab(
+                        dbc.Input(
+                            placeholder="Positive Number",
+                            min=0,
+                            id="custom-period",
+                            type="number",
+                        ),
+                        label="Custom Period",
+                        tab_id="custom",
+                    ),
+                ],
+                className="pt-3",
+            ),
+        ],
+        className="pt-3" + border,
     )
 
 
 def common_component():
-    return html.Div(
-        [
-            _level(),
-            _select(),
-            _date_case(),
-        ]
-    )
+    border = " my-2 py-2 border border-secondary "
+    return html.Div([_level(border), _category(border), _date(border)])
 
 
 ###
