@@ -220,9 +220,9 @@ def _select_all_region(all_region: bool):
 )
 def _switch_date_by_level(
     level: str,
-    region_values: list,
-    state_values: list,
-    city_values: list,
+    region_values: list[str],
+    state_values: list[str],
+    city_values: list[str],
     all_region: bool,
     all_state: bool,
     all_city: bool,
