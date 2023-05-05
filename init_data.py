@@ -2,18 +2,22 @@ import pandas as pd
 
 levels = ["Region", "State", "City"]
 
-dfs: dict[str, pd.DataFrame] = {}
-for x in levels:
-    dfs[x] = pd.read_csv(
-        f"data_{x.lower()}.zip",
-        dtype={  # shrink memory usage by converting known types
-            x: "string",
-            "Confirmed Cases": "int",
-            "Death Cases": "int",
-        },
-        parse_dates=["Date"],
-        nrows=400000,
-    )
+_dfs: dict[str, pd.DataFrame] = {x: {} for x in levels}
+
+
+def get_df(level: str, freq: str):
+    if freq not in _dfs[level]:
+        _dfs[level][freq] = pd.read_csv(
+            f"data/{level}/{freq}.zip",
+            dtype={  # shrink memory usage by converting known types
+                level: "string",
+                "Confirmed Cases": "int",
+                "Death Cases": "int",
+            },
+            parse_dates=["Date"],
+        )
+
+    return _dfs[level][freq]
 
 
 # calling method to get global data
@@ -28,18 +32,18 @@ def _get_values():
     state_to_city = {}
 
     for _, row in (
-        dfs[levels[0]].drop_duplicates(levels[0], ignore_index=True).iterrows()
+        get_df(levels[0], "M").drop_duplicates(levels[0], ignore_index=True).iterrows()
     ):
         region_no_limit.add(row[levels[0]])
     for _, row in (
-        dfs[levels[1]].drop_duplicates(levels[1], ignore_index=True).iterrows()
+        get_df(levels[1], "M").drop_duplicates(levels[1], ignore_index=True).iterrows()
     ):
         r, s = row[levels[1]].split(" / ")
         region_has_states.add(r)
         region_to_state_state.setdefault(r, set())
         region_to_state_state[r].add(s)
     for _, row in (
-        dfs[levels[2]].drop_duplicates(levels[2], ignore_index=True).iterrows()
+        get_df(levels[2], "M").drop_duplicates(levels[2], ignore_index=True).iterrows()
     ):
         r, s, c = row[levels[2]].split(" / ")
         region_has_cities.add(r)

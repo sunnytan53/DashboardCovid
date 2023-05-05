@@ -146,13 +146,13 @@ def line_page():
                     [
                         dbc.Col(
                             children=[_level(border), _category(border), _date(border)],
-                            width=4,
                             class_name="ms-5 text-center",
                         ),
                         dbc.Col(
                             dbc.Spinner(
                                 dcc.Graph("line-graph"), size="md", delay_show=300
                             ),
+                            width=8,
                         ),
                     ],
                 ),
@@ -165,7 +165,6 @@ def line_page():
             ),
         ],
         className="px-5 bg-info",
-        id="graph-tabs",
     )
 
 
@@ -312,6 +311,7 @@ def _select_all_region(all_region: bool):
     Input("all-region", "value"),
     Input("all-state", "value"),
     Input("all-city", "value"),
+    Input("period", "value"),
 )
 def _switch_date_by_level(
     level: str,
@@ -321,30 +321,31 @@ def _switch_date_by_level(
     all_region: bool,
     all_state: bool,
     all_city: bool,
+    period: str,
 ):
     df: pd.DataFrame = None
     if level == "Region":
         if region_values:
-            df = dfs[level]
+            df = get_df(level, period[0])
             df = df[df[level].isin(region_values)]
         elif all_region:
-            df = dfs[level]
+            df = get_df(level, period[0])
     elif level == "State" and (region_values or all_region):
         if state_values:
-            df = dfs[level]
+            df = get_df(level, period[0])
             df = df[df[level].isin(state_values)]
         elif all_state:
-            df = dfs[level]
+            df = get_df(level, period[0])
     elif (
         level == "City"
         and (region_values or all_region)
         and (state_values or all_state)
     ):
         if city_values:
-            df = dfs[level]
+            df = get_df(level, period[0])
             df = df[df[level].isin(city_values)]
         elif all_city:
-            df = dfs[level]
+            df = get_df(level, period[0])
 
     if df is not None:
         min_date = df["Date"].min()

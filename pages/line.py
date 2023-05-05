@@ -1,7 +1,7 @@
 from dash import html, dcc, Input, Output, callback
 import plotly.express as px
 import dash
-from init_data import dfs
+from init_data import get_df
 from comps import line_page
 from datetime import datetime
 import pandas as pd
@@ -52,7 +52,7 @@ def update_line(
     valid_state = bool(state_values) or all_state
     valid_city = bool(city_values) or all_city
 
-    df = dfs[level]
+    df = get_df(level, period[0])
     mask = None
     if level == "City":
         if valid_region and valid_state and valid_city:
@@ -74,23 +74,14 @@ def update_line(
     mask &= (df["Date"] >= datetime.strptime(start[:10], "%Y-%m-%d")) & (
         df["Date"] <= datetime.strptime(end[:10], "%Y-%m-%d")
     )
-
-    df = df[mask].drop(
-        "Death Cases" if case_cat == "Confirmed Cases" else "Confirmed Cases",
-        axis=1,
-    )
-
-    freq = period[0]
-    df_list = []
-    for _, x in df.groupby(level):
-        x[case_cat] = x.groupby(x["Date"].dt.to_period(freq), as_index=False)[case_cat].sum()
-        
-        df_list.append(x)
-    print(df_list[0])
+    df = df[mask]
 
     if to_cumu == "Cumulative":
-        for x in df_list:
+        df_list = []
+        for _, x in df.groupby(level):
             x[case_cat] = x[case_cat].cumsum()
+            df_list.append(x)
+        df = pd.concat(df_list)
 
-    fig = px.line(pd.concat(df_list), x="Date", y=case_cat, color=level)
+    fig = px.line(df, x="Date", y=case_cat, color=level)
     return fig, fig
