@@ -43,7 +43,7 @@ def update_line(
     start: str,
     end: str,
     case_cat: str,
-    to_cumu: bool,
+    to_cumu: str,
 ):
     valid_region = bool(region_values) or all_region
     valid_state = bool(state_values) or all_state
@@ -72,7 +72,7 @@ def update_line(
     )
 
     df = df[mask]
-    if to_cumu:
+    if to_cumu == "Cumulative":
         df = df.drop(
             "Death Cases" if case_cat == "Confirmed Cases" else "Confirmed Cases",
             axis=1,

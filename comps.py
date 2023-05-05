@@ -89,11 +89,18 @@ def _category(border: str):
             ),
             dbc.Row(
                 [
-                    dbc.Col("Cumulative: "),
-                    dbc.Col(dbc.Checkbox(id="cumu", label="Cumulative"), width=4),
-                    dbc.Col(),
+                    dbc.Col("Type: ", width=2),
+                    dbc.Col(
+                        dcc.RadioItems(
+                            ["Individual", "Cumulative"],
+                            id="cumu",
+                            value="Individual",
+                            inline=True,
+                            labelClassName="px-3 mx-1 bg-warning",
+                        )
+                    ),
                 ],
-                className="pt-2",
+                className="pt-3",
             ),
         ],
         className="fs-5" + border,
@@ -104,7 +111,12 @@ def _date(border: str):
     return dbc.Row(
         [
             dbc.Row(
-                dcc.DatePickerRange(id="date", disabled=True),
+                dbc.Col(
+                    [
+                        dcc.DatePickerRange(id="date", disabled=True),
+                        dbc.Button("reset", id="reset-time", className="ms-3"),
+                    ]
+                ),
             ),
             dbc.Tabs(
                 [
@@ -361,4 +373,34 @@ def _switch_date_by_level(
         max_date = df["Date"].max()
         return False, min_date, max_date, min_date, max_date
 
-    return [True] + [None] * 4
+    return [True, None, None, None, None]
+
+
+last_click = -1
+
+
+@callback(
+    Output("date", "start_date", True),
+    Output("date", "end_date", True),
+    Input("reset-time", "n_clicks"),
+    Input("date", "disabled"),
+    Input("date", "start_date"),
+    Input("date", "end_date"),
+    Input("date", "min_date_allowed"),
+    Input("date", "max_date_allowed"),
+    prevent_initial_call=True,
+)
+def _reset_time(
+    click: int,
+    disabled: bool,
+    cur_start: str,
+    cur_end: str,
+    orig_start: str,
+    orig_end: str,
+):
+    global last_click
+    if not disabled and last_click != click:
+        last_click = click
+        if orig_start and orig_end:
+            return orig_start, orig_end
+    return cur_start, cur_end
