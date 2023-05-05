@@ -14,6 +14,7 @@ layout = line_page()
 
 @callback(
     Output("line-graph", "figure"),
+    Output("full-graph", "figure"),
     Input("level", "value"),
     Input("select-region", "value"),
     Input("select-state", "value"),
@@ -28,6 +29,7 @@ layout = line_page()
     Input("date", "end_date"),
     Input("case", "value"),
     Input("cumu", "value"),
+    Input("period", "value"),
 )
 def update_line(
     level: str,
@@ -44,6 +46,7 @@ def update_line(
     end: str,
     case_cat: str,
     to_cumu: str,
+    period: str,
 ):
     valid_region = bool(region_values) or all_region
     valid_state = bool(state_values) or all_state
@@ -64,23 +67,30 @@ def update_line(
             mask = df[level].isin(region_options if all_region else region_values)
 
     if mask is None:
-        return px.line()
+        fig = px.line()
+        return fig, fig
 
     case_cat += " Cases"
     mask &= (df["Date"] >= datetime.strptime(start[:10], "%Y-%m-%d")) & (
         df["Date"] <= datetime.strptime(end[:10], "%Y-%m-%d")
     )
 
-    df = df[mask]
-    if to_cumu == "Cumulative":
-        df = df.drop(
-            "Death Cases" if case_cat == "Confirmed Cases" else "Confirmed Cases",
-            axis=1,
-        )
-        df_list = []
-        for _, x in df.groupby(level):
-            x[case_cat] = x[case_cat].cumsum()
-            df_list.append(x)
-        df = pd.concat(df_list)
+    df = df[mask].drop(
+        "Death Cases" if case_cat == "Confirmed Cases" else "Confirmed Cases",
+        axis=1,
+    )
 
-    return px.line(df, x="Date", y=case_cat, color=level)
+    freq = period[0]
+    df_list = []
+    for _, x in df.groupby(level):
+        x[case_cat] = x.groupby(x["Date"].dt.to_period(freq), as_index=False)[case_cat].sum()
+        
+        df_list.append(x)
+    print(df_list[0])
+
+    if to_cumu == "Cumulative":
+        for x in df_list:
+            x[case_cat] = x[case_cat].cumsum()
+
+    fig = px.line(pd.concat(df_list), x="Date", y=case_cat, color=level)
+    return fig, fig

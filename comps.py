@@ -118,32 +118,22 @@ def _date(border: str):
                     ]
                 ),
             ),
-            dbc.Tabs(
+            dbc.Row(
                 [
-                    dbc.Tab(
-                        [
-                            dbc.RadioItems(
-                                ["Month", "Year", "Quarter"], inline=True, value="Month"
-                            )
-                        ],
-                        label="Exact Period",
-                        tab_id="exact",
-                    ),
-                    dbc.Tab(
-                        dbc.Input(
-                            placeholder="Positive Number",
-                            min=0,
-                            id="custom-period",
-                            type="number",
+                    dbc.Col("Period: ", width=2, className="pt-3"),
+                    dbc.Col(
+                        dcc.RadioItems(
+                            ["Day", "Week", "Month", "Quarter", "Year"],
+                            id="period",
+                            inline=True,
+                            value="Month",
+                            labelClassName="px-3 mx-1 mt-1 bg-warning",
                         ),
-                        label="Custom Period",
-                        tab_id="custom",
                     ),
-                ],
-                className="pt-3",
+                ]
             ),
         ],
-        className="pt-3" + border,
+        className="pt-3 fs-5" + border,
     )
 
 
@@ -163,37 +153,25 @@ def line_page():
                             dbc.Spinner(
                                 dcc.Graph("line-graph"), size="md", delay_show=300
                             ),
-                            id="graph-placeholder",
                         ),
                     ],
                 ),
                 label="Default",
+                tab_id="default",
             ),
             dbc.Tab(
                 dbc.Spinner(dcc.Graph("full-graph"), size="md", delay_show=300),
                 label="Fullscreen Graph",
-                id="full-graph",
             ),
         ],
         className="px-5 bg-info",
-        id="tabs",
+        id="graph-tabs",
     )
 
 
 ###
 ### Callbacks
 ###
-@callback(
-    Output("full-graph", "figure"),
-    Input("tabs", "active_tab"),
-    Input("line-graph", "figure"),
-)
-def switch_tab(active: str, graph):
-    if active == "default":
-        return None
-    return graph
-
-
 @callback(
     Output("select-region", "options"),
     Input("level", "value"),
