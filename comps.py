@@ -92,9 +92,9 @@ def _category(border: str):
                     dbc.Col("Type: ", width=2),
                     dbc.Col(
                         dcc.RadioItems(
-                            ["Individual", "Cumulative"],
+                            ["Cumulative", "Individual"],
                             id="cumu",
-                            value="Individual",
+                            value="Cumulative",
                             inline=True,
                             labelClassName="px-3 mx-1 bg-warning",
                         )

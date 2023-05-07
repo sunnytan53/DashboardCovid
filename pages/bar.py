@@ -1,8 +1,7 @@
-from dash import html
-
 import dash
-import dash_bootstrap_components as dbc
+from init_data import get_df
+from comps import get_page_layout
 
 dash.register_page(__name__, name="Bar")
 
-layout = ""
+layout = get_page_layout("bar")
