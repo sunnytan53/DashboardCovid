@@ -113,7 +113,7 @@ def _date(border: str):
             dbc.Row(
                 dbc.Col(
                     [
-                        dcc.DatePickerRange(id="date", disabled=True),
+                        dcc.DatePickerRange(id="date"),
                         dbc.Button("reset", id="reset-time", className="ms-3"),
                     ]
                 ),
@@ -137,7 +137,7 @@ def _date(border: str):
     )
 
 
-def line_page():
+def get_page_layout(page: str):
     border = " my-2 py-2 border border-secondary "
     return dbc.Tabs(
         [
@@ -149,9 +149,7 @@ def line_page():
                             class_name="ms-5 text-center",
                         ),
                         dbc.Col(
-                            dbc.Spinner(
-                                dcc.Graph("line-graph"), size="md", delay_show=300
-                            ),
+                            dbc.Spinner(dcc.Graph("graph"), size="md", delay_show=300),
                             width=8,
                         ),
                     ],
@@ -163,8 +161,10 @@ def line_page():
                 dbc.Spinner(dcc.Graph("full-graph"), size="md", delay_show=300),
                 label="Fullscreen Graph",
             ),
+            dcc.Location("active-page"),
         ],
         className="px-5 bg-info",
+        active_tab="default",
     )
 
 
@@ -299,60 +299,18 @@ def _select_all_region(all_region: bool):
 
 
 @callback(
-    Output("date", "disabled"),
     Output("date", "start_date"),
     Output("date", "end_date"),
     Output("date", "min_date_allowed"),
     Output("date", "max_date_allowed"),
     Input("level", "value"),
-    Input("select-region", "value"),
-    Input("select-state", "value"),
-    Input("select-city", "value"),
-    Input("all-region", "value"),
-    Input("all-state", "value"),
-    Input("all-city", "value"),
     Input("period", "value"),
 )
-def _switch_date_by_level(
-    level: str,
-    region_values: list[str],
-    state_values: list[str],
-    city_values: list[str],
-    all_region: bool,
-    all_state: bool,
-    all_city: bool,
-    period: str,
-):
-    df: pd.DataFrame = None
-    if level == "Region":
-        if region_values:
-            df = get_df(level, period[0])
-            df = df[df[level].isin(region_values)]
-        elif all_region:
-            df = get_df(level, period[0])
-    elif level == "State" and (region_values or all_region):
-        if state_values:
-            df = get_df(level, period[0])
-            df = df[df[level].isin(state_values)]
-        elif all_state:
-            df = get_df(level, period[0])
-    elif (
-        level == "City"
-        and (region_values or all_region)
-        and (state_values or all_state)
-    ):
-        if city_values:
-            df = get_df(level, period[0])
-            df = df[df[level].isin(city_values)]
-        elif all_city:
-            df = get_df(level, period[0])
-
-    if df is not None:
-        min_date = df["Date"].min()
-        max_date = df["Date"].max()
-        return False, min_date, max_date, min_date, max_date
-
-    return [True, None, None, None, None]
+def _switch_date_by_level(level: str, period: str):
+    df = get_df(level, period[0])
+    min_date = df["Date"].min()
+    max_date = df["Date"].max()
+    return min_date, max_date, min_date, max_date
 
 
 last_click = -1
