@@ -5,7 +5,7 @@ import graph  # import the callback to update graph
 
 app = dash.Dash(__name__, use_pages=True, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
-pages = ["line", "bar", "pie"]
+pages = ["line", "bar", "pie", "map"]
 app.layout = html.Div(
     [
         dcc.Location(id="url", refresh=False),

@@ -1,6 +1,6 @@
 from dash import Input, Output, callback
 import plotly.express as px
-from init_data import get_df, empty_figure
+from init_data import empty_figure, get_df, get_df_loc
 from datetime import datetime
 import pandas as pd
 
@@ -74,13 +74,13 @@ def update_graph(  # can't use _name here sine import will ignore this function
     if mask is None:
         return empty_figure, empty_figure
 
-    case_cat += " Cases"
     if start:
         mask &= df["Date"] >= datetime.strptime(start[:10], "%Y-%m-%d")
     if end:
         mask &= df["Date"] <= datetime.strptime(end[:10], "%Y-%m-%d")
     df = df[mask]
 
+    case_cat += " Cases"
     if to_cumu == "Cumulative":
         df_list = []
         for _, x in df.groupby(level):
@@ -100,6 +100,19 @@ def update_graph(  # can't use _name here sine import will ignore this function
     elif active_page == "pie":
         fig = px.pie(df, names=level, values=case_cat, hole=float(pie_hole))
         fig.update_traces(textposition="inside", textinfo="percent+label")
+
+    elif active_page == "map":
+        df_list2 = []
+        for l, x in df.groupby(level):
+            df_list2.append([l, x[case_cat].sum()])
+        df = pd.DataFrame(df_list2, columns=[level, case_cat])
+        fig = px.scatter_geo(
+            df.merge(get_df_loc(level), on=level),
+            lat="Latitude",
+            lon="Longitude",
+            size=case_cat,
+            color=level,
+        )
 
     else:
         if line_marker == "Simple":

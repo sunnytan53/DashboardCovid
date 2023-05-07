@@ -75,7 +75,7 @@ def _level():
 
 
 def _category(page: str):
-    has_agg = page == "pie"
+    has_agg = page in ["pie", "map"]
     return dbc.Row(
         [
             dbc.Row(
@@ -97,9 +97,9 @@ def _category(page: str):
                     dbc.Col("Type:", width=2),
                     dbc.Col(
                         dcc.RadioItems(
-                            ["Individual"] if has_agg else ["Cumulative", "Individual"],
+                            ["Auto-Cumulative"] if has_agg else ["Cumulative", "Individual"],
                             id="cumu",
-                            value="Individual" if has_agg else "Cumulative",
+                            value="Auto-Cumulative" if has_agg else "Cumulative",
                             inline=True,
                             labelClassName="px-3 mx-1 bg-warning",
                         )
@@ -193,6 +193,14 @@ def _option(page: str):
                     dbc.Col(dcc.Slider(0, 0.5, step=0.1, id="pie-hole", value=0)),
                 ]
             ),
+            dbc.RadioItems(id="line-marker"),
+            dbc.RadioItems(id="bar-column"),
+            dbc.RadioItems(id="bar-orient"),
+        ]
+    elif page == "map":
+        row = [
+            html.B("No Map Options", className="text-info"),
+            dbc.RadioItems(id="pie-hole"),
             dbc.RadioItems(id="line-marker"),
             dbc.RadioItems(id="bar-column"),
             dbc.RadioItems(id="bar-orient"),

@@ -25,7 +25,7 @@ def get_df(level: str, freq: str):
 
 def get_df_loc(level: str):
     if level not in _dfs_loc:
-        _dfs[level] = pd.read_csv(
+        _dfs_loc[level] = pd.read_csv(
             f"data/{level}/loc.zip",
             dtype={  # shrink memory usage by converting known types
                 level: "string",
