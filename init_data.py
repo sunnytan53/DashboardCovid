@@ -2,10 +2,10 @@ import pandas as pd
 import plotly.express as px
 
 levels = ["Region", "State", "City"]
+empty_figure = px.pie()
 
 _dfs: dict[str, pd.DataFrame] = {x: {} for x in levels}
-
-empty_figure = px.pie()
+_dfs_loc: dict[str, pd.DataFrame] = {}
 
 
 def get_df(level: str, freq: str):
@@ -21,6 +21,20 @@ def get_df(level: str, freq: str):
         )
 
     return _dfs[level][freq]
+
+
+def get_df_loc(level: str):
+    if level not in _dfs_loc:
+        _dfs[level] = pd.read_csv(
+            f"data/{level}/loc.zip",
+            dtype={  # shrink memory usage by converting known types
+                level: "string",
+                "Latitude Cases": "float",
+                "Longitude": "float",
+            },
+        )
+
+    return _dfs_loc[level]
 
 
 # calling method to get global data

@@ -51,4 +51,3 @@ df_out["City"] = (
 df_out.drop(["Region", "State"], axis=1).sort_values(["City", "Date"]).to_csv(
     "data/City/D.zip", compression="zip", index=False
 )
-# print(df_out["City"].unique())
