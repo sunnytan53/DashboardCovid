@@ -66,6 +66,8 @@ def update_graph(  # can't use _name here sine import will ignore this function
     if mask is None:
         if active_page == "bar":
             fig = px.bar()
+        elif active_page == "pie":
+            fig = px.pie()
         else:
             fig = px.line()
         return fig, fig
@@ -85,6 +87,9 @@ def update_graph(  # can't use _name here sine import will ignore this function
 
     if active_page == "bar":
         fig = px.bar(df, x="Date", y=case_cat, color=level)
+    elif active_page == "pie":
+        fig = px.pie(df, names=level, values=case_cat)
+        fig.update_traces(textposition="inside", textinfo="percent+label")
     else:
         fig = px.line(df, x="Date", y=case_cat, color=level)
     return fig, fig

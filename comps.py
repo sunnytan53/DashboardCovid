@@ -3,7 +3,10 @@ import dash_bootstrap_components as dbc
 from init_data import *
 
 
-def _level(border: str):
+border = " my-2 py-2 border border-secondary "
+
+
+def _level(page: str):
     return dbc.Row(
         [
             dbc.Row(
@@ -70,7 +73,8 @@ def _level(border: str):
     )
 
 
-def _category(border: str):
+def _category(page: str):
+    has_agg = page in ["pie", "histogram"]
     return dbc.Row(
         [
             dbc.Row(
@@ -92,9 +96,9 @@ def _category(border: str):
                     dbc.Col("Type: ", width=2),
                     dbc.Col(
                         dcc.RadioItems(
-                            ["Cumulative", "Individual"],
+                            ["Individual"] if has_agg else ["Cumulative", "Individual"],
                             id="cumu",
-                            value="Cumulative",
+                            value="Individual" if has_agg else "Cumulative",
                             inline=True,
                             labelClassName="px-3 mx-1 bg-warning",
                         )
@@ -107,7 +111,7 @@ def _category(border: str):
     )
 
 
-def _date(border: str):
+def _date(page: str):
     return dbc.Row(
         [
             dbc.Row(
@@ -138,14 +142,13 @@ def _date(border: str):
 
 
 def get_page_layout(page: str):
-    border = " my-2 py-2 border border-secondary "
     return dbc.Tabs(
         [
             dbc.Tab(
                 dbc.Row(
                     [
                         dbc.Col(
-                            children=[_level(border), _category(border), _date(border)],
+                            children=[_level(page), _category(page), _date(page)],
                             class_name="ms-5 text-center",
                         ),
                         dbc.Col(
