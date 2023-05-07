@@ -1,8 +1,11 @@
 import pandas as pd
+import plotly.express as px
 
 levels = ["Region", "State", "City"]
 
 _dfs: dict[str, pd.DataFrame] = {x: {} for x in levels}
+
+empty_figure = px.pie()
 
 
 def get_df(level: str, freq: str):

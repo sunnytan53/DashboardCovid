@@ -1,6 +1,6 @@
 from dash import Input, Output, callback
 import plotly.express as px
-from init_data import get_df
+from init_data import get_df, empty_figure
 from datetime import datetime
 import pandas as pd
 
@@ -24,6 +24,11 @@ import pandas as pd
     Input("cumu", "value"),
     Input("period", "value"),
     Input("active-page", "pathname"),
+    ### sepcific chart options
+    Input("line-marker", "value"),
+    Input("bar-column", "value"),
+    Input("bar-orient", "value"),
+    Input("pie-hole", "value"),
 )
 def update_graph(  # can't use _name here sine import will ignore this function
     level: str,
@@ -42,6 +47,11 @@ def update_graph(  # can't use _name here sine import will ignore this function
     to_cumu: str,
     period: str,
     active_page: str,
+    ### sepcific chart options
+    line_marker: str,
+    bar_column: str,
+    bar_orient: str,
+    pie_hole: str,
 ):
     valid_region = bool(region_values) or all_region
     valid_state = bool(state_values) or all_state
@@ -61,21 +71,14 @@ def update_graph(  # can't use _name here sine import will ignore this function
         if valid_region:
             mask = df[level].isin(region_options if all_region else region_values)
 
-
-    active_page = active_page[1:]
     if mask is None:
-        if active_page == "bar":
-            fig = px.bar()
-        elif active_page == "pie":
-            fig = px.pie()
-        else:
-            fig = px.line()
-        return fig, fig
+        return empty_figure, empty_figure
 
     case_cat += " Cases"
-    mask &= (df["Date"] >= datetime.strptime(start[:10], "%Y-%m-%d")) & (
-        df["Date"] <= datetime.strptime(end[:10], "%Y-%m-%d")
-    )
+    if start:
+        mask &= df["Date"] >= datetime.strptime(start[:10], "%Y-%m-%d")
+    if end:
+        mask &= df["Date"] <= datetime.strptime(end[:10], "%Y-%m-%d")
     df = df[mask]
 
     if to_cumu == "Cumulative":
@@ -85,11 +88,26 @@ def update_graph(  # can't use _name here sine import will ignore this function
             df_list.append(x)
         df = pd.concat(df_list)
 
+    active_page = active_page[1:]
     if active_page == "bar":
-        fig = px.bar(df, x="Date", y=case_cat, color=level)
+        if bar_orient == "Horizontal":
+            fig = px.bar(df, x=case_cat, y="Date", color=level, orientation="h")
+        else:
+            fig = px.bar(df, x="Date", y=case_cat, color=level)
+        if bar_column == "Group":
+            fig.update_layout(barmode="group")
+
     elif active_page == "pie":
-        fig = px.pie(df, names=level, values=case_cat)
+        fig = px.pie(df, names=level, values=case_cat, hole=float(pie_hole))
         fig.update_traces(textposition="inside", textinfo="percent+label")
+
     else:
-        fig = px.line(df, x="Date", y=case_cat, color=level)
+        if line_marker == "Simple":
+            fig = px.line(df, x="Date", y=case_cat, color=level, markers=True)
+        elif line_marker == "Complex":
+            fig = px.line(df, x="Date", y=case_cat, color=level, symbol=level)
+        else:
+            fig = px.line(df, x="Date", y=case_cat, color=level)
+
+    fig.update_layout(height=600)
     return fig, fig

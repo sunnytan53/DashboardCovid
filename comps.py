@@ -1,17 +1,19 @@
 from dash import dcc, html, callback, Input, Output
 import dash_bootstrap_components as dbc
 from init_data import *
+import plotly.express as px
+from datetime import datetime
 
 
-border = " my-2 py-2 border border-secondary "
+border = " my-2 py-2 border border-secondary fs-5 "
 
 
-def _level(page: str):
+def _level():
     return dbc.Row(
         [
             dbc.Row(
                 [
-                    dbc.Col("Level: ", width=1),
+                    dbc.Col("Level:", width=1),
                     dbc.Col(
                         dcc.RadioItems(
                             levels,
@@ -22,7 +24,6 @@ def _level(page: str):
                         ),
                     ),
                 ],
-                className="fs-5",
             ),
             dbc.Row(
                 [
@@ -74,12 +75,12 @@ def _level(page: str):
 
 
 def _category(page: str):
-    has_agg = page in ["pie", "histogram"]
+    has_agg = page == "pie"
     return dbc.Row(
         [
             dbc.Row(
                 [
-                    dbc.Col("Case: ", width=1),
+                    dbc.Col("Case:", width=1),
                     dbc.Col(
                         dcc.RadioItems(
                             ["Confirmed", "Death"],
@@ -93,7 +94,7 @@ def _category(page: str):
             ),
             dbc.Row(
                 [
-                    dbc.Col("Type: ", width=2),
+                    dbc.Col("Type:", width=2),
                     dbc.Col(
                         dcc.RadioItems(
                             ["Individual"] if has_agg else ["Cumulative", "Individual"],
@@ -107,24 +108,16 @@ def _category(page: str):
                 className="pt-3",
             ),
         ],
-        className="fs-5" + border,
+        className=border,
     )
 
 
-def _date(page: str):
+def _date():
     return dbc.Row(
         [
             dbc.Row(
-                dbc.Col(
-                    [
-                        dcc.DatePickerRange(id="date"),
-                        dbc.Button("reset", id="reset-time", className="ms-3"),
-                    ]
-                ),
-            ),
-            dbc.Row(
                 [
-                    dbc.Col("Period: ", width=2, className="pt-3"),
+                    dbc.Col("Period:", width=2),
                     dbc.Col(
                         dcc.RadioItems(
                             ["Day", "Week", "Month", "Quarter", "Year"],
@@ -136,9 +129,97 @@ def _date(page: str):
                     ),
                 ]
             ),
+            dbc.Row(
+                [
+                    dbc.Col("Range:", width=2),
+                    dbc.Col(
+                        dcc.DatePickerRange(
+                            id="date",
+                            clearable=True,
+                            show_outside_days=True,
+                        )
+                    ),
+                ],
+                className="pt-3",
+            ),
         ],
-        className="pt-3 fs-5" + border,
+        className="pt-3" + border,
     )
+
+
+def _option(page: str):
+    row = None
+    if page == "bar":
+        row = [
+            html.B("Bar Options", className="text-info"),
+            dbc.Row(
+                [
+                    dbc.Col("Column:", width=1),
+                    dbc.Col(
+                        dcc.RadioItems(
+                            ["Stack", "Group"],
+                            value="Stack",
+                            inline=True,
+                            id="bar-column",
+                            labelClassName="px-3 mx-1 bg-warning",
+                        ),
+                    ),
+                ]
+            ),
+            dbc.Row(
+                [
+                    dbc.Col("Orientation:", width=1),
+                    dbc.Col(
+                        dcc.RadioItems(
+                            ["Vertical", "Horizontal"],
+                            value="Vertical",
+                            inline=True,
+                            id="bar-orient",
+                            labelClassName="px-3 mx-1 bg-warning",
+                        )
+                    ),
+                ],
+                className="pt-2",
+            ),
+            dbc.RadioItems(id="line-marker"),
+            dbc.RadioItems(id="pie-hole"),
+        ]
+    elif page == "pie":
+        row = [
+            html.B("Pie Options", className="text-info"),
+            dbc.Row(
+                [
+                    dbc.Col("Hole:", width=1),
+                    dbc.Col(dcc.Slider(0, 0.5, step=0.1, id="pie-hole", value=0)),
+                ]
+            ),
+            dbc.RadioItems(id="line-marker"),
+            dbc.RadioItems(id="bar-column"),
+            dbc.RadioItems(id="bar-orient"),
+        ]
+    else:
+        row = [
+            html.B("Line Options", className="text-info"),
+            dbc.Row(
+                [
+                    dbc.Col("Marker:", width=1),
+                    dbc.Col(
+                        dcc.RadioItems(
+                            ["None", "Simple", "Complex"],
+                            value="None",
+                            inline=True,
+                            id="line-marker",
+                            labelClassName="px-3 mx-1 bg-warning",
+                        ),
+                    ),
+                ]
+            ),
+            dbc.RadioItems(id="bar-column"),
+            dbc.RadioItems(id="bar-orient"),
+            dbc.RadioItems(id="pie-hole"),
+        ]
+
+    return dbc.Row(row, className=border)
 
 
 def get_page_layout(page: str):
@@ -148,11 +229,20 @@ def get_page_layout(page: str):
                 dbc.Row(
                     [
                         dbc.Col(
-                            children=[_level(page), _category(page), _date(page)],
+                            children=[
+                                _level(),
+                                _category(page),
+                                _date(),
+                                _option(page),
+                            ],
                             class_name="ms-5 text-center",
                         ),
                         dbc.Col(
-                            dbc.Spinner(dcc.Graph("graph"), size="md", delay_show=300),
+                            dbc.Spinner(
+                                dcc.Graph("graph", figure=empty_figure),
+                                size="md",
+                                delay_show=300,
+                            ),
                             width=8,
                         ),
                     ],
@@ -161,7 +251,11 @@ def get_page_layout(page: str):
                 tab_id="default",
             ),
             dbc.Tab(
-                dbc.Spinner(dcc.Graph("full-graph"), size="md", delay_show=300),
+                dbc.Spinner(
+                    dcc.Graph("full-graph", figure=empty_figure),
+                    size="md",
+                    delay_show=300,
+                ),
                 label="Fullscreen Graph",
             ),
             dcc.Location("active-page"),
@@ -302,8 +396,6 @@ def _select_all_region(all_region: bool):
 
 
 @callback(
-    Output("date", "start_date"),
-    Output("date", "end_date"),
     Output("date", "min_date_allowed"),
     Output("date", "max_date_allowed"),
     Input("level", "value"),
@@ -311,36 +403,4 @@ def _select_all_region(all_region: bool):
 )
 def _switch_date_by_level(level: str, period: str):
     df = get_df(level, period[0])
-    min_date = df["Date"].min()
-    max_date = df["Date"].max()
-    return min_date, max_date, min_date, max_date
-
-
-last_click = -1
-
-
-@callback(
-    Output("date", "start_date", True),
-    Output("date", "end_date", True),
-    Input("reset-time", "n_clicks"),
-    Input("date", "disabled"),
-    Input("date", "start_date"),
-    Input("date", "end_date"),
-    Input("date", "min_date_allowed"),
-    Input("date", "max_date_allowed"),
-    prevent_initial_call=True,
-)
-def _reset_time(
-    click: int,
-    disabled: bool,
-    cur_start: str,
-    cur_end: str,
-    orig_start: str,
-    orig_end: str,
-):
-    global last_click
-    if not disabled and last_click != click:
-        last_click = click
-        if orig_start and orig_end:
-            return orig_start, orig_end
-    return cur_start, cur_end
+    return df["Date"].min(), df["Date"].max()
