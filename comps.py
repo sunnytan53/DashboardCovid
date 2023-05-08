@@ -1,9 +1,6 @@
-from dash import dcc, html, callback, Input, Output
+from dash import dcc, html
 import dash_bootstrap_components as dbc
-from init_data import *
-import plotly.express as px
-from datetime import datetime
-
+from init_data import levels, empty_figure
 
 border = " my-2 py-2 border border-secondary fs-5 "
 
@@ -97,9 +94,11 @@ def _category(page: str):
                     dbc.Col("Type:", width=2),
                     dbc.Col(
                         dcc.RadioItems(
-                            ["Auto-Cumulative"] if has_agg else ["Cumulative", "Individual"],
+                            ["Cumulative (auto/force)"]
+                            if has_agg
+                            else ["Cumulative", "Individual"],
                             id="cumu",
-                            value="Auto-Cumulative" if has_agg else "Cumulative",
+                            value="Cumulative (auto/force)" if has_agg else "Cumulative",
                             inline=True,
                             labelClassName="px-3 mx-1 bg-warning",
                         )
@@ -112,7 +111,8 @@ def _category(page: str):
     )
 
 
-def _date():
+def _date(page: str):
+    has_agg = page in ["pie", "map"]
     return dbc.Row(
         [
             dbc.Row(
@@ -120,10 +120,12 @@ def _date():
                     dbc.Col("Period:", width=2),
                     dbc.Col(
                         dcc.RadioItems(
-                            ["Day", "Week", "Month", "Quarter", "Year"],
+                            ["Month (auto/force)"]
+                            if has_agg
+                            else ["Day", "Week", "Month", "Quarter", "Year"],
                             id="period",
                             inline=True,
-                            value="Month",
+                            value="Month (auto/force)" if has_agg else "Month",
                             labelClassName="px-3 mx-1 mt-1 bg-warning",
                         ),
                     ),
@@ -240,7 +242,7 @@ def get_page_layout(page: str):
                             children=[
                                 _level(),
                                 _category(page),
-                                _date(),
+                                _date(page),
                                 _option(page),
                             ],
                             class_name="ms-5 text-center",
@@ -273,142 +275,5 @@ def get_page_layout(page: str):
     )
 
 
-###
-### Callbacks
-###
-@callback(
-    Output("select-region", "options"),
-    Input("level", "value"),
-)
-def _switch_select_region(level: str):
-    if level == "State":
-        return region_has_states
-    elif level == "City":
-        return region_has_cities
-    return region_no_limit
-
-
-@callback(
-    Output("select-state", "placeholder"),
-    Output("select-state", "options"),
-    Output("select-state", "value"),
-    Output("select-state", "disabled"),
-    Input("level", "value"),
-    Input("select-region", "value"),
-    Input("select-region", "options"),
-    Input("all-region", "value"),
-    Input("all-state", "value"),
-)
-def _switch_select_state(
-    level: str,
-    values: list[str],
-    region_options: list[str],
-    all_region: bool,
-    all_state: bool,
-):
-    ret = ["Select a region above, or check all", [], [], True]
-    if level == "Region":
-        ret[0] = "Not state or city level"
-    else:
-        if all_region:
-            values = region_options
-        if values:
-            region_to_state = (
-                region_to_state_city if level == "City" else region_to_state_state
-            )
-            for region in values:
-                for state in region_to_state[region]:
-                    state_str = f"{region} / {state}"
-                    ret[1].append(state_str)
-            # show states
-            ret[1].sort()
-            if all_state:
-                ret[0] = "All states selected"
-            else:
-                ret[3] = False
-                ret[0] = "Click to search/select states"
-    # empty selection
-    return ret
-
-
-@callback(
-    Output("select-city", "placeholder"),
-    Output("select-city", "options"),
-    Output("select-city", "value"),
-    Output("select-city", "disabled"),
-    Input("level", "value"),
-    Input("select-state", "value"),
-    Input("select-state", "options"),
-    Input("all-state", "value"),
-    Input("all-city", "value"),
-)
-def _switch_select_city(
-    level: str,
-    values: str,
-    state_options: list[str],
-    all_state: bool,
-    all_city: bool,
-):
-    ret = ["Select a state above, or check all", [], [], True]
-    if level != "City":
-        ret[0] = "Not city level"
-    else:
-        if all_state:
-            values = state_options
-        if values:
-            for x in values:
-                region, state = x.split(" / ")
-                for city in state_to_city[state]:
-                    ret[1].append(f"{x} / {city}")
-            # show cities
-            ret[1].sort()
-            if all_city:
-                ret[3] = True
-                ret[0] = "All cities selected"
-            else:
-                ret[3] = False
-                ret[0] = "Click to search/select cities"
-    # empty selection
-    return ret
-
-
-@callback(
-    Output("all-region", "disabled"),
-    Output("all-state", "disabled"),
-    Output("all-city", "disabled"),
-    Output("all-region", "value"),
-    Output("all-state", "value"),
-    Output("all-city", "value"),
-    Input("level", "value"),
-)
-def _swtich_all(level: str):
-    arr = [False] * 3 + [False] * 3
-    if level == "Region":
-        arr[1] = True
-        arr[2] = True
-    elif level == "State":
-        arr[2] = True
-    return arr
-
-
-@callback(
-    Output("select-region", "placeholder"),
-    Output("select-region", "value"),
-    Output("select-region", "disabled"),
-    Input("all-region", "value"),
-)
-def _select_all_region(all_region: bool):
-    if all_region:
-        return "All regions selected", [], True
-    return "Click to search/select regions", [], False
-
-
-@callback(
-    Output("date", "min_date_allowed"),
-    Output("date", "max_date_allowed"),
-    Input("level", "value"),
-    Input("period", "value"),
-)
-def _switch_date_by_level(level: str, period: str):
-    df = get_df(level, period[0])
-    return df["Date"].min(), df["Date"].max()
+def get_home_layout():
+    return None

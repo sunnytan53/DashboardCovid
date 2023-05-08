@@ -1,8 +1,7 @@
 import dash
 from dash import html
+from comps import get_home_layout
 
 dash.register_page(__name__, path="/")
 
-layout = html.Div(
-    [html.Img(src=dash.get_asset_url(f"{x}.png")) for x in ["line", "bar", "pie"]]
-)
+layout = html.Div()

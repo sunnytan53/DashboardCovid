@@ -43,7 +43,6 @@ def _get_values():
     region_no_limit = set()
     region_has_states = set()
     region_has_cities = set()
-    state_has_cities = set()
     region_to_state_state = {}
     region_to_state_city = {}
     state_to_city = {}
@@ -64,7 +63,6 @@ def _get_values():
     ):
         r, s, c = row[levels[2]].split(" / ")
         region_has_cities.add(r)
-        state_has_cities.add(s)
         region_to_state_city.setdefault(r, set())
         region_to_state_city[r].add(s)
         state_to_city.setdefault(s, set())
@@ -78,7 +76,6 @@ def _get_values():
         sorted(region_no_limit),
         sorted(region_has_states),
         sorted(region_has_cities),
-        sorted(state_has_cities),
         region_to_state_state,
         region_to_state_city,
         state_to_city,
@@ -89,7 +86,6 @@ def _get_values():
     region_no_limit,
     region_has_states,
     region_has_cities,
-    state_has_cities,
     region_to_state_state,
     region_to_state_city,
     state_to_city,

@@ -1,7 +1,7 @@
 from dash import html, dcc, Input, Output, callback
 import dash
 import dash_bootstrap_components as dbc
-import graph  # import the callback to update graph
+import calls  # import the callback to update graph
 
 app = dash.Dash(__name__, use_pages=True, external_stylesheets=[dbc.themes.BOOTSTRAP])
 
