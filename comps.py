@@ -98,7 +98,9 @@ def _category(page: str):
                             if has_agg
                             else ["Cumulative", "Individual"],
                             id="cumu",
-                            value="Cumulative (auto/force)" if has_agg else "Cumulative",
+                            value="Cumulative (auto/force)"
+                            if has_agg
+                            else "Cumulative",
                             inline=True,
                             labelClassName="px-3 mx-1 bg-warning",
                         )
@@ -153,7 +155,7 @@ def _option(page: str):
     row = None
     if page == "bar":
         row = [
-            html.B("Bar Options", className="text-info"),
+            html.B("Bar Options", className="text-warning"),
             dbc.Row(
                 [
                     dbc.Col("Column:", width=1),
@@ -188,7 +190,7 @@ def _option(page: str):
         ]
     elif page == "pie":
         row = [
-            html.B("Pie Options", className="text-info"),
+            html.B("Pie Options", className="text-warning"),
             dbc.Row(
                 [
                     dbc.Col("Hole:", width=1),
@@ -201,15 +203,15 @@ def _option(page: str):
         ]
     elif page == "map":
         row = [
-            html.B("No Map Options", className="text-info"),
+            html.B("No Map Options", className="text-warning"),
             dbc.RadioItems(id="pie-hole"),
             dbc.RadioItems(id="line-marker"),
             dbc.RadioItems(id="bar-column"),
             dbc.RadioItems(id="bar-orient"),
         ]
-    else:
+    elif page == "line":
         row = [
-            html.B("Line Options", className="text-info"),
+            html.B("Line Options", className="text-warning"),
             dbc.Row(
                 [
                     dbc.Col("Marker:", width=1),
@@ -228,11 +230,15 @@ def _option(page: str):
             dbc.RadioItems(id="bar-orient"),
             dbc.RadioItems(id="pie-hole"),
         ]
+    else:
+        row = [
+            html.B("Chart Options", className="text-warning"),
+        ]
 
     return dbc.Row(row, className=border)
 
 
-def get_page_layout(page: str):
+def get_page_layout(page: str, home: bool = False):
     return dbc.Tabs(
         [
             dbc.Tab(
@@ -248,7 +254,9 @@ def get_page_layout(page: str):
                             class_name="ms-5 text-center",
                         ),
                         dbc.Col(
-                            dbc.Spinner(
+                            get_home_1()
+                            if home
+                            else dbc.Spinner(
                                 dcc.Graph("graph", figure=empty_figure),
                                 size="md",
                                 delay_show=300,
@@ -262,7 +270,9 @@ def get_page_layout(page: str):
             ),
             dbc.Tab(
                 dbc.Spinner(
-                    dcc.Graph("full-graph", figure=empty_figure),
+                    get_home_2()
+                    if home
+                    else dcc.Graph("full-graph", figure=empty_figure),
                     size="md",
                     delay_show=300,
                 ),
@@ -275,5 +285,51 @@ def get_page_layout(page: str):
     )
 
 
-def get_home_layout():
-    return None
+def get_home_1():
+    return html.Div(
+        [
+            html.B("Thank you for using DashboardCovid!", className="fs-1"),
+            html.Div(
+                "This visualization system focuses on comparin among different locations. "
+                "With this said, the x-axis is always the locations and the y-axis is always the number of cases. "
+                "You are able to compare any locations (that are in the same level) provided in the database.",
+                className="bg-warning fs-3",
+            ),
+            html.Br(),
+            html.Div(
+                "The left boxes are the menu you will see in any pages for different charts."
+            ),
+            html.Br(),
+            html.Div(
+                "The top box is where you will select the location level and the locations. "
+                "You are able to choose which level you want and multi-select locations for comparasion. "
+            ),
+            html.Div(
+                "Warning: the 'all' options may cause a lot of lag, espeically in Bar chart...",
+                className="text-danger",
+            ),
+            html.Br(),
+            html.Div("The second box is where you select the data column and type."),
+            html.Br(),
+            html.Div(
+                "The thrid box is how you want to view the graph in different time period, "
+                "and you are able to limit the range of the time. (None means no limit)"
+            ),
+            html.Div(
+                "Warning: the daily and weekly option may cause a lot of lag",
+                className="text-danger",
+            ),
+            html.Br(),
+            html.Div(
+                "The last box is the chart-specific option, which brings more dynamics to the chart."
+            ),
+        ],
+        className="fs-5 text-center",
+    )
+
+
+def get_home_2():
+    return html.Div(
+        "This is simply a placeholder for the graph in a whole browser view",
+        className="fs-1 text-center",
+    )
