@@ -288,7 +288,7 @@ def get_page_layout(page: str, home: bool = False):
 def get_home_1():
     return html.Div(
         [
-            html.B("Thank you for using DashboardCovid!", className="fs-1"),
+            html.B("DashboardCovid Quick Start", className="fs-1"),
             html.Div(
                 "This visualization system focuses on comparin among different locations. "
                 "With this said, the x-axis is always the locations and the y-axis is always the number of cases. "
