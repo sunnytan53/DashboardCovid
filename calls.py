@@ -15,6 +15,7 @@ import plotly.express as px
 from datetime import datetime
 
 
+# show regions based on location level
 @callback(
     Output("select-region", "options"),
     Input("level", "value"),
@@ -27,6 +28,8 @@ def _switch_select_region(level: str):
     return region_no_limit
 
 
+# show states based on location level and region selection
+# disable options if location level is not matched
 @callback(
     Output("select-state", "placeholder"),
     Output("select-state", "options"),
@@ -70,6 +73,8 @@ def _switch_select_state(
     return ret
 
 
+# show cities based on location level and region selection and state selection
+# disable options if location level is not matched
 @callback(
     Output("select-city", "placeholder"),
     Output("select-city", "options"),
@@ -111,6 +116,7 @@ def _switch_select_city(
     return ret
 
 
+# disable options for all selection if location level is not matched
 @callback(
     Output("all-region", "disabled"),
     Output("all-state", "disabled"),
@@ -130,6 +136,8 @@ def _swtich_all(level: str):
     return arr
 
 
+# set selection placehodler
+# NOTE: state and city already includes in above methods
 @callback(
     Output("select-region", "placeholder"),
     Output("select-region", "value"),
@@ -142,6 +150,7 @@ def _select_all_region(all_region: bool):
     return "Click to search/select regions", [], False
 
 
+# limit the date selection based on location level and time period
 @callback(
     Output("date", "min_date_allowed"),
     Output("date", "max_date_allowed"),
@@ -153,6 +162,9 @@ def _switch_date_by_level(level: str, period: str):
     return df["Date"].min(), df["Date"].max()
 
 
+# update graphs with ALL configurations
+# WARNING: do NOT set the method name to _xxxx,
+#          it has problem unlike above callbacks
 @callback(
     Output("graph", "figure"),
     Output("full-graph", "figure"),
@@ -178,7 +190,7 @@ def _switch_date_by_level(level: str, period: str):
     Input("bar-orient", "value"),
     Input("pie-hole", "value"),
 )
-def update_graph(  # can't use _name here sine import will ignore this function
+def update_graph(
     level: str,
     region_values: list[str],
     state_values: list[str],
@@ -201,7 +213,7 @@ def update_graph(  # can't use _name here sine import will ignore this function
     bar_orient: str,
     pie_hole: str,
 ):
-
+    # get the corresponding dataframe
     valid_region = bool(region_values) or all_region
     valid_state = bool(state_values) or all_state
     valid_city = bool(city_values) or all_city
@@ -220,15 +232,19 @@ def update_graph(  # can't use _name here sine import will ignore this function
         if valid_region:
             mask = df[level].isin(region_options if all_region else region_values)
 
+    # if options are invalid, like some input is empty
+    # return the empty figure
     if mask is None:
         return empty_figure, empty_figure
-
+    
+    # limit time range if there is one
     if start:
         mask &= df["Date"] >= datetime.strptime(start[:10], "%Y-%m-%d")
     if end:
         mask &= df["Date"] <= datetime.strptime(end[:10], "%Y-%m-%d")
     df = df[mask]
 
+    # cumulate if selected
     case_cat += " Cases"
     if to_cumu == "Cumulative":
         df_list = []
@@ -237,6 +253,7 @@ def update_graph(  # can't use _name here sine import will ignore this function
             df_list.append(x)
         df = pd.concat(df_list)
 
+    # construct the graph with their own options and functions
     active_page = active_page[1:]
     if active_page == "bar":
         if bar_orient == "Horizontal":
@@ -271,5 +288,6 @@ def update_graph(  # can't use _name here sine import will ignore this function
         else:
             fig = px.line(df, x="Date", y=case_cat, color=level)
 
+    # set the height of the graph to fit the page better
     fig.update_layout(height=600)
     return fig, fig

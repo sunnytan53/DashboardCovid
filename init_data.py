@@ -7,7 +7,8 @@ empty_figure = px.pie()
 _dfs: dict[str, pd.DataFrame] = {x: {} for x in levels}
 _dfs_loc: dict[str, pd.DataFrame] = {}
 
-
+# get df for given level and period
+# this ensures data is read only
 def get_df(level: str, freq: str):
     if freq not in _dfs[level]:
         _dfs[level][freq] = pd.read_csv(
@@ -23,6 +24,7 @@ def get_df(level: str, freq: str):
     return _dfs[level][freq]
 
 
+# read location data for map chart
 def get_df_loc(level: str):
     if level not in _dfs_loc:
         _dfs_loc[level] = pd.read_csv(

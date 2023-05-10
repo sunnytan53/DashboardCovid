@@ -5,6 +5,7 @@ from init_data import levels, empty_figure
 border = " my-2 py-2 border border-secondary fs-5 "
 
 
+# first box
 def _level():
     return dbc.Row(
         [
@@ -71,6 +72,7 @@ def _level():
     )
 
 
+# second box
 def _category(page: str):
     has_agg = page in ["pie", "map"]
     return dbc.Row(
@@ -113,6 +115,7 @@ def _category(page: str):
     )
 
 
+# third box
 def _date(page: str):
     has_agg = page in ["pie", "map"]
     return dbc.Row(
@@ -151,6 +154,7 @@ def _date(page: str):
     )
 
 
+# fourth box
 def _option(page: str):
     row = None
     if page == "bar":
@@ -238,6 +242,8 @@ def _option(page: str):
     return dbc.Row(row, className=border)
 
 
+# the main method of this file
+# return the layout for each page, should be assigned to each page's layout
 def get_page_layout(page: str, home: bool = False):
     return dbc.Tabs(
         [
@@ -254,7 +260,7 @@ def get_page_layout(page: str, home: bool = False):
                             class_name="ms-5 text-center",
                         ),
                         dbc.Col(
-                            get_home_1()
+                            _get_home_1()
                             if home
                             else dbc.Spinner(
                                 dcc.Graph("graph", figure=empty_figure),
@@ -270,7 +276,7 @@ def get_page_layout(page: str, home: bool = False):
             ),
             dbc.Tab(
                 dbc.Spinner(
-                    get_home_2()
+                    _get_home_2()
                     if home
                     else dcc.Graph("full-graph", figure=empty_figure),
                     size="md",
@@ -285,7 +291,8 @@ def get_page_layout(page: str, home: bool = False):
     )
 
 
-def get_home_1():
+# home page tab 1
+def _get_home_1():
     return html.Div(
         [
             html.B("DashboardCovid Quick Start", className="fs-1"),
@@ -328,7 +335,8 @@ def get_home_1():
     )
 
 
-def get_home_2():
+# home page tab 2
+def _get_home_2():
     return html.Div(
         "This is simply a placeholder for the graph in a whole browser view",
         className="fs-1 text-center",
